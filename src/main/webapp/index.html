@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Java EE 7 Sample</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <script>
+            function f_onmessage(evt) {
+                jmsQueue = document.getElementById('jmsQueue');
+                jmsQueue.innerHTML = jmsQueue.innerHTML + evt.data + '<br/>';
+            }
+
+            function open() {
+                ws = new WebSocket('ws://' + document.location.host + '/javaee7-sample/websocket');
+                ws.onmessage = f_onmessage;
+            }
+
+            function close() {
+                ws.close();
+            }
+
+            function sendMessage(msg) {
+                ws.send(msg);
+            }
+        </script>
+    </head>
+    <body>
+        <h1>WebSockets and JMS</h1>
+        <a href="javascript:open();">Open Session</a>
+        <br/>
+        <input id="message" type="text" name="message" placeholder="Message..." />
+        <a href="javascript:sendMessage(document.getElementById('message').value)">Send message</a>
+        <br/>
+        <a href="javascript:close();">Close Session</a>
+        <br/>
+        <h3>WebSocket messages received:</h3>
+        <div id="jmsQueue" style="border: 1px solid">
+
+        </div>
+    </body>
+</html>
