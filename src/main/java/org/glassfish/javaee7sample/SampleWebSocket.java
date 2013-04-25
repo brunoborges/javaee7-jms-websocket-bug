@@ -4,13 +4,12 @@
  */
 package org.glassfish.javaee7sample;
 
+import java.io.IOException;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
-import javax.inject.Inject;
-import javax.jms.JMSContext;
-import javax.jms.Queue;
 import javax.validation.constraints.NotNull;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -29,32 +28,36 @@ public class SampleWebSocket {
 //    private Queue myQueue;
 //    @Inject
 //    private JMSContext jmsContext;
-    private static HashSet<Session> sessions = new HashSet<>();
+    private static Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
 
     @OnOpen
     public void onOpen(@NotNull Session session) {
-        System.out.println("onOpen");
-        String nickname = session.getPathParameters().get("nickname");
-        Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "WebSocket session opened for '{0}'", nickname);
-        sessions.add(session);
-
-//        System.out.println("queue exists? " + (myQueue != null));
+        try {
+            sessions.add(session);
+            session.getBasicRemote().sendText("session opened.");
+        } catch (IOException ex) {
+            Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @OnMessage
-    public void onMessage(@NotNull String message, @NotNull Session client) {
-        System.out.println("onMessage");
-        Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "WebSocket session onMessage()");
-        Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "WebSocket message received: {0}", message);
+    public void onMessage(final @NotNull String message, final @NotNull Session client) {
         for (Session s : sessions) {
-            s.getAsyncRemote().sendText(client.getPathParameters().get("nickname") + "> " + message);
+            try {
+                s.getBasicRemote().sendText(client.getPathParameters().get("nickname") + "> " + message);
+            } catch (IOException ex) {
+                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
     @OnClose
     public void onClose(final Session session) {
-        System.out.println("onClose");
-        Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "WebSocket session close()");
-        sessions.remove(session);
+        try {
+            sessions.remove(session);
+            session.getBasicRemote().sendText("session closed.");
+        } catch (IOException ex) {
+            Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }

@@ -4,22 +4,26 @@
         <title>Java EE 7 Sample</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script>
+            var websocketSession;
+
             function f_onmessage(evt) {
                 jmsQueue = document.getElementById('jmsQueue');
                 jmsQueue.innerHTML = jmsQueue.innerHTML + evt.data + '<br/>';
             }
 
             function open() {
-                ws = new WebSocket('ws://' + document.location.host + '/javaee7-sample/websocket/' + document.getElementById('nickname').value);
-                ws.onmessage = f_onmessage;
+                if (!websocketSession) {
+                    websocketSession = new WebSocket('ws://' + document.location.host + '/javaee7-sample/websocket/' + document.getElementById('nickname').value);
+                    websocketSession.onmessage = f_onmessage;
+                }
             }
 
             function close() {
-                ws.close();
+                websocketSession.close();
             }
 
             function sendMessage(msg) {
-                ws.send(msg);
+                websocketSession.send(msg);
             }
         </script>
     </head>
