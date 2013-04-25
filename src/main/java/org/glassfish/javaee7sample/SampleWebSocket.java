@@ -15,6 +15,7 @@ import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
+import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 
 /**
@@ -31,9 +32,10 @@ public class SampleWebSocket {
     private static Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
 
     @OnOpen
-    public void onOpen(@NotNull Session session) {
+    public void onOpen(@PathParam("nickname") String nickname, Session session) {
         try {
             sessions.add(session);
+            session.getUserProperties().put("nickname", nickname);
             session.getBasicRemote().sendText("session opened.");
         } catch (IOException ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
@@ -41,10 +43,10 @@ public class SampleWebSocket {
     }
 
     @OnMessage
-    public void onMessage(final @NotNull String message, final @NotNull Session client) {
+    public void onMessage(final String message, final Session client) {
         for (Session s : sessions) {
             try {
-                s.getBasicRemote().sendText(client.getPathParameters().get("nickname") + "> " + message);
+                s.getBasicRemote().sendText(client.getUserProperties().get("nickname") + "> " + message);
             } catch (IOException ex) {
                 Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             }
