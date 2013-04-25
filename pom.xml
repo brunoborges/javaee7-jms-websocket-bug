@@ -55,12 +55,14 @@
             </activation>
             <properties>
                 <glassfishHome>/home/bruno/Work/tools/glassfish4</glassfishHome>
+                <glassfishHost>localhost</glassfishHost>
             </properties>
         </profile>
         <profile>
             <id>prod</id>
             <properties>
                 <glassfishHome>/opt/glassfish4</glassfishHome>
+                <glassfishHost>glassfish4.toolscloud.org</glassfishHost>
             </properties>
         </profile>        
     </profiles>
@@ -134,7 +136,6 @@
                     </dependency>
                 </dependencies>
             </plugin>
-
             <plugin>
                 <groupId>org.codeartisans.asadmin</groupId>
                 <artifactId>asadmin-maven-plugin</artifactId>
@@ -142,10 +143,10 @@
                 <configuration>
                     <glassfishHome>${glassfishHome}</glassfishHome>
                     <domain>domain1</domain>
-                    <host>localhost</host>
+                    <host>${glassfishHost}</host>
                     <port>4848</port>
                     <user>admin</user>
-                    <!--<passwordfile>~/.asadmintruststore</passwordfile>-->
+                    <passwordfile>~/.asadmintruststore</passwordfile>
                     <appArchive>${project.build.directory}/${project.build.finalName}.${project.artifact.artifactHandler.extension}</appArchive>
                     <contextRoot>${project.artifactId}</contextRoot>
                 </configuration>
