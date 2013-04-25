@@ -10,7 +10,7 @@
             }
 
             function open() {
-                ws = new WebSocket('ws://' + document.location.host + '/javaee7-sample/websocket');
+                ws = new WebSocket('ws://' + document.location.host + '/javaee7-sample/websocket/' + document.getElementById('nickname').value);
                 ws.onmessage = f_onmessage;
             }
 
@@ -25,9 +25,10 @@
     </head>
     <body>
         <h1>WebSockets and JMS</h1>
+        <input id="nickname" type="text" name="nickname" placeholder="Nickname" />
         <a href="javascript:open();">Open Session</a>
         <br/>
-        <input id="message" type="text" name="message" placeholder="Message..." />
+        <input id="message" type="text" name="message" placeholder="Message" />
         <a href="javascript:sendMessage(document.getElementById('message').value)">Send message</a>
         <br/>
         <a href="javascript:close();">Close Session</a>
