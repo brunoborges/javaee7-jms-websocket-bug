@@ -54,15 +54,25 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
-                <glassfishHome>/home/bruno/Work/tools/glassfish4</glassfishHome>
-                <glassfishHost>localhost</glassfishHost>
+                <glassfish-home>/home/bruno/Work/tools/glassfish4</glassfish-home>
+                <glassfish-host>localhost</glassfish-host>
+                <password-file>~/.asadmintruststore</password-file>
             </properties>
         </profile>
         <profile>
             <id>prod</id>
             <properties>
-                <glassfishHome>/opt/glassfish4</glassfishHome>
-                <glassfishHost>glassfish4.toolscloud.org</glassfishHost>
+                <glassfish-home>/opt/glassfish4</glassfish-home>
+                <glassfish-host>glassfish4.toolscloud.org</glassfish-host>
+                <password-file>~/.asadmintruststore</password-file>
+            </properties>
+        </profile>        
+        <profile>
+            <id>localprod</id>
+            <properties>
+                <glassfish-home>/home/bruno/Work/tools/glassfish4</glassfish-home>
+                <glassfish-host>glassfish4.toolscloud.org</glassfish-host>
+                <password-file>/home/bruno/.asadmin-glassfish4-toolscloud</password-file>
             </properties>
         </profile>        
     </profiles>
@@ -141,12 +151,12 @@
                 <artifactId>asadmin-maven-plugin</artifactId>
                 <version>0.12</version>
                 <configuration>
-                    <glassfishHome>${glassfishHome}</glassfishHome>
+                    <glassfishHome>${glassfish-home}</glassfishHome>
                     <domain>domain1</domain>
-                    <host>${glassfishHost}</host>
+                    <host>${glassfish-host}</host>
                     <port>4848</port>
                     <user>admin</user>
-                    <passwordfile>~/.asadmintruststore</passwordfile>
+                    <passwordfile>${password-file}</passwordfile>
                     <appArchive>${project.build.directory}/${project.build.finalName}.${project.artifact.artifactHandler.extension}</appArchive>
                     <contextRoot>${project.artifactId}</contextRoot>
                 </configuration>
