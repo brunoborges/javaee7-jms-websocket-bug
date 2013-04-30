@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html>
     <head>
-        <title>Java EE 7 Sample</title>
+        <title>Java EE 7 JMS with WebSockets Bug</title>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <script>
             var websocketSession;
 
             function f_onmessage(evt) {
-                jmsQueue = document.getElementById('jmsQueue');
-                jmsQueue.innerHTML = jmsQueue.innerHTML + evt.data + '<br/>';
+                websocketMessages = document.getElementById('websocketMessages');
+                websocketMessages.innerHTML = websocketMessages.innerHTML + evt.data + '<br/>';
             }
 
             function open() {
                 if (!websocketSession) {
-                    websocketSession = new WebSocket('ws://' + document.location.host + '/javaee7-sample/websocket/' + document.getElementById('nickname').value);
+                    websocketSession = new WebSocket('ws://' + document.location.host + '/javaee7-jms-websocket-bug/websocket');
                     websocketSession.onmessage = f_onmessage;
                 }
             }
@@ -28,8 +28,7 @@
         </script>
     </head>
     <body>
-        <h1>WebSockets and JMS</h1>
-        <input id="nickname" type="text" name="nickname" placeholder="Nickname" />
+        <h1>WebSockets and JMS Bug <a href="https://java.net/jira/browse/GLASSFISH-20371">#20371</a></h1>
         <a href="javascript:open();">Open Session</a>
         <br/>
         <input id="message" type="text" name="message" placeholder="Message" />
@@ -38,7 +37,7 @@
         <a href="javascript:close();">Close Session</a>
         <br/>
         <h3>WebSocket messages received:</h3>
-        <div id="jmsQueue" style="border: 1px solid">
+        <div id="websocketMessages" style="border: 1px solid">
 
         </div>
     </body>
