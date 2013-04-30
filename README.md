@@ -1,8 +1,4 @@
-javaee7-sample
-==============
+javaee7-jms-websocket-bug
+=========================
 
-This is a sample JavaEE 7 Application
-
-This application showcases several JavaEE 7 functionalities, and can be used to introduce JavaEE 7 for developers.
-
-Just clone the repository, and open the project on NetBeans!
+Bug when connecting a WebSocket with JMS. See GLASSFISH-20371
