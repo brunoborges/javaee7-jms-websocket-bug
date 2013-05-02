@@ -40,7 +40,7 @@ public class SampleWebSocket {
 
             // create a consumer for this session
             session.getBasicRemote().sendText("going to create a consumer on top of JMSContext and destination myQueue");
-            
+
             JMSConsumer consumer = jmsContext.createConsumer(myQueue);
             consumer.setMessageListener(new WebSocketSessionJMSListener(session));
 
@@ -48,7 +48,7 @@ public class SampleWebSocket {
 
             // store this consumer on this session
             session.getBasicRemote().sendText("consumer created and started");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
@@ -57,7 +57,12 @@ public class SampleWebSocket {
 
     @OnMessage
     public void onMessage(final String message, final Session client) {
-        jmsContext.createProducer().send(myQueue, message);
+        try {
+            jmsContext.createProducer().send(myQueue, message);
+        } catch (Exception ex) {
+            Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
+            ex.printStackTrace();
+        }
     }
 
     @OnClose
@@ -65,7 +70,7 @@ public class SampleWebSocket {
         try {
             ((JMSConsumer) session.getUserProperties().get("consumer")).close();
             session.getBasicRemote().sendText("WebSocket Session and JMS Consumer closed");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
@@ -87,8 +92,8 @@ public class SampleWebSocket {
             try {
                 Logger.getLogger(WebSocketSessionJMSListener.class.getName()).log(Level.INFO, "Message received [id={0}] [payload={1}]", new Object[]{msg.getJMSMessageID(), msg.getBody(String.class)});
                 webSocketSession.getBasicRemote().sendText("[Echoing from JMS]: " + msg.getBody(String.class));
-            } catch (IOException | JMSException ex) {
-                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception ex) {
+                Logger.getLogger(WebSocketSessionJMSListener.class.getName()).log(Level.SEVERE, null, ex);
                 ex.printStackTrace();
             }
         }
