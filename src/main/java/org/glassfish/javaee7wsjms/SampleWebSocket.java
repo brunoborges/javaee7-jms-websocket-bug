@@ -4,16 +4,17 @@
  */
 package org.glassfish.javaee7wsjms;
 
-import java.io.IOException;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Resource;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
-import javax.jms.JMSConsumer;
+import javax.inject.Named;
 import javax.jms.JMSContext;
-import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.MessageListener;
 import javax.jms.Queue;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
@@ -25,40 +26,43 @@ import javax.websocket.server.ServerEndpoint;
  *
  * @author bruno
  */
+@Named
 @ServerEndpoint("/websocket")
 public class SampleWebSocket {
 
     @Resource(mappedName = "jms/myQueue")
     private Queue myQueue;
-    @Inject
     private JMSContext jmsContext;
+    private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
+
+    @Inject
+    public SampleWebSocket(JMSContext jmsc) {
+        this.jmsContext = jmsc;
+    }
 
     @OnOpen
     public void onOpen(final Session session) {
         try {
             session.getBasicRemote().sendText("session opened");
+            sessions.add(session);
 
-            // create a consumer for this session
-            session.getBasicRemote().sendText("going to create a consumer on top of JMSContext and destination myQueue");
-
-            JMSConsumer consumer = jmsContext.createConsumer(myQueue);
-            consumer.setMessageListener(new WebSocketSessionJMSListener(session));
-
-            session.getUserProperties().put("consumer", consumer);
-
-            // store this consumer on this session
-            session.getBasicRemote().sendText("consumer created and started");
+            if (jmsContext == null) {
+                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, "JMSContext is null");
+            } else if (myQueue == null) {
+                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, "Queue is null");
+            }
         } catch (Exception ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
-
     }
 
     @OnMessage
     public void onMessage(final String message, final Session client) {
         try {
-            jmsContext.createProducer().send(myQueue, message);
+            if (jmsContext != null && myQueue != null) {
+                jmsContext.createProducer().send(myQueue, message);
+            }
         } catch (Exception ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
@@ -68,34 +72,15 @@ public class SampleWebSocket {
     @OnClose
     public void onClose(final Session session) {
         try {
-            ((JMSConsumer) session.getUserProperties().get("consumer")).close();
-            session.getBasicRemote().sendText("WebSocket Session and JMS Consumer closed");
+            session.getBasicRemote().sendText("WebSocket Session closed");
+            sessions.remove(session);
         } catch (Exception ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
         }
     }
 
-    private static class WebSocketSessionJMSListener implements MessageListener {
-
-        private Session webSocketSession;
-
-        public WebSocketSessionJMSListener() {
-        }
-
-        public WebSocketSessionJMSListener(Session wsSession) {
-            this.webSocketSession = wsSession;
-        }
-
-        @Override
-        public void onMessage(Message msg) {
-            try {
-                Logger.getLogger(WebSocketSessionJMSListener.class.getName()).log(Level.INFO, "Message received [id={0}] [payload={1}]", new Object[]{msg.getJMSMessageID(), msg.getBody(String.class)});
-                webSocketSession.getBasicRemote().sendText("[Echoing from JMS]: " + msg.getBody(String.class));
-            } catch (Exception ex) {
-                Logger.getLogger(WebSocketSessionJMSListener.class.getName()).log(Level.SEVERE, null, ex);
-                ex.printStackTrace();
-            }
-        }
+    public void onJMSMessage(@Observes @WebSocketJMSMessage Message msg) {
+        Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "Got JMS Message at WebSocket!");
     }
 }
