@@ -4,18 +4,18 @@
  */
 package org.glassfish.javaee7wsjms;
 
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Resource;
 import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.jms.JMSContext;
+import javax.jms.JMSException;
 import javax.jms.Message;
-import javax.jms.Queue;
 import javax.websocket.OnClose;
 import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
@@ -28,16 +28,14 @@ import javax.websocket.server.ServerEndpoint;
  */
 @Named
 @ServerEndpoint("/websocket")
-public class SampleWebSocket {
+public class SampleWebSocket implements Serializable {
 
-    @Resource(mappedName = "jms/myQueue")
-    private Queue myQueue;
-    private JMSContext jmsContext;
+    private MessagenSenderSessionBean senderBean;
     private static final Set<Session> sessions = Collections.synchronizedSet(new HashSet<Session>());
 
     @Inject
-    public SampleWebSocket(JMSContext jmsc) {
-        this.jmsContext = jmsc;
+    public SampleWebSocket(MessagenSenderSessionBean sb) {
+        this.senderBean = sb;
     }
 
     @OnOpen
@@ -45,12 +43,6 @@ public class SampleWebSocket {
         try {
             session.getBasicRemote().sendText("session opened");
             sessions.add(session);
-
-            if (jmsContext == null) {
-                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, "JMSContext is null");
-            } else if (myQueue == null) {
-                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, "Queue is null");
-            }
         } catch (Exception ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
             ex.printStackTrace();
@@ -60,13 +52,18 @@ public class SampleWebSocket {
     @OnMessage
     public void onMessage(final String message, final Session client) {
         try {
-            if (jmsContext != null && myQueue != null) {
-                jmsContext.createProducer().send(myQueue, message);
-            }
-        } catch (Exception ex) {
+            client.getBasicRemote().sendText("sending message to SessionBean...");
+        } catch (IOException ex) {
             Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
-            ex.printStackTrace();
         }
+
+        if (senderBean != null) {
+            Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "senderBean is not null");
+            senderBean.sendMessage(message);
+        } else {
+            Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "senderBean is null");
+        }
+
     }
 
     @OnClose
@@ -82,5 +79,13 @@ public class SampleWebSocket {
 
     public void onJMSMessage(@Observes @WebSocketJMSMessage Message msg) {
         Logger.getLogger(SampleWebSocket.class.getName()).log(Level.INFO, "Got JMS Message at WebSocket!");
+        for (Session s : sessions) {
+            try {
+                s.getBasicRemote().sendText("message from JMS: " + msg.getBody(String.class));
+            } catch (IOException | JMSException ex) {
+                Logger.getLogger(SampleWebSocket.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
+
 }
